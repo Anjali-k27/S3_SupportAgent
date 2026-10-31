@@ -1,7 +1,7 @@
 # Enterprise AI Support Platform
 ### Session 3 of 12 — The ReAct Architecture
 
-A production-grade AI customer support agent built with LangGraph and Gemini 2.5 Flash. Each session in this 12-part series adds a new capability layer. Session 3 introduces the full **ReAct (Reason + Act) loop** with three safety mechanisms that prevent the agent from looping forever, blowing up the context window, or repeating failed tool calls.
+A production-grade AI customer support agent built with LangGraph and OpenAI-compatible models via OpenRouter or OpenAI. Each session in this 12-part series adds a new capability layer. Session 3 introduces the full ReAct loop with tool use, safety checks, and guarded iteration flow.
 
 ---
 
@@ -21,11 +21,11 @@ The fraud handler is also upgraded from a stub into a real tool-calling node usi
 
 ## Architecture
 
-```
+```text
 User Ticket
     │
     ▼
-classify_node          ← Gemini classifies into: technical | billing | fraud | general
+classify_node          ← LLM classifies into: technical | billing | fraud | general
     │
     ├── technical ──┐
     ├── billing ────┼──► agent_node (ReAct loop)
@@ -46,13 +46,15 @@ classify_node          ← Gemini classifies into: technical | billing | fraud |
 
 ## Project Structure
 
-```
-session3/
+```text
+S3_SupportAgent/
 ├── support_agent.py   # Agent logic, tools, graph definition
 ├── api.py             # FastAPI server (REST + SSE streaming)
 ├── index.html         # Single-file frontend
 ├── requirements.txt   # Python dependencies
-└── .env               # API keys (not committed)
+├── .env               # API keys (not committed)
+├── README.md          # Project documentation
+└── .gitignore         # Git ignore rules
 ```
 
 ### `support_agent.py` — Key sections
@@ -81,13 +83,15 @@ session3/
 
 ### Prerequisites
 - Python 3.10+
-- A Google AI Studio API key ([get one here](https://aistudio.google.com))
+- An OpenAI-compatible API key, either:
+  - OpenRouter key via `OPENROUTER_API_KEY`, or
+  - OpenAI key via `OPENAI_API_KEY`
 
 ### Install
 
 ```bash
-git clone https://github.com/waseemkhan606/phase3-session3
-cd phase3-session3
+git clone https://github.com/Anjali-k27/S3_SupportAgent.git
+cd S3_SupportAgent
 python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
@@ -95,10 +99,31 @@ pip install -r requirements.txt
 
 ### Configure
 
-Create a `.env` file in the project root:
+Create a `.env` file in the project root.
 
+For OpenRouter:
+
+```env
+OPENROUTER_API_KEY=your-openrouter-key
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+OPENAI_MODEL=openai/gpt-4o-mini
 ```
-GOOGLE_API_KEY=your-key-here
+
+For direct OpenAI:
+
+```env
+OPENAI_API_KEY=your-openai-key
+OPENAI_BASE_URL=https://api.openai.com/v1
+OPENAI_MODEL=gpt-4o-mini
+```
+
+You may also set either of these variables instead of the model-specific names:
+
+```env
+OPENROUTER_API_KEY=your-openrouter-key
+OPENAI_API_KEY=your-openai-key
+OPENROUTER_MODEL=openai/gpt-4o-mini
+OPENAI_MODEL=gpt-4o-mini
 ```
 
 ### Run the server
@@ -115,7 +140,7 @@ Open `http://localhost:8000` in your browser.
 python support_agent.py
 ```
 
-This runs 6 tests and then the full 5-check verification suite.
+This runs the Session 3 verification suite.
 
 ---
 
@@ -208,7 +233,7 @@ Looks up fraud risk score, flagged behavioral patterns, and recommended action.
 
 ## Sample Tickets to Try
 
-```
+```text
 # Multi-tool (billing + technical)
 Account C-1002 is past due and I cannot log in after the recent update.
 
@@ -251,7 +276,7 @@ All 5 checks must pass before advancing to Session 4:
 |---|---|---|
 | 1 | The Blueprint | ✅ Complete |
 | 2 | Tool Binding & Execution | ✅ Complete |
-| **3** | **The ReAct Architecture** | ✅ **Complete** |
+| 3 | The ReAct Architecture | ✅ Complete |
 | 4 | Persistence & Threading | 🔒 Next |
 | 5 | Memory Compression | 🔒 |
 | 6 | The Shield (PII + Injection) | 🔒 |
